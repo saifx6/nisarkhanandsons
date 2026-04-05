@@ -37,8 +37,8 @@ export interface ProductLog {
   product_id: string;
   changed_by: string;
   change_type: string;
-  old_value: any;
-  new_value: any;
+  old_value: unknown;
+  new_value: unknown;
   created_at: string;
   user_profiles?: Partial<UserProfile>;
 }

@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase';
 import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,11 +57,12 @@ export default function ProductForm({ initialData, isAdmin }: { initialData?: Pr
       router.push('/inventory');
       router.refresh();
       
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as Error;
       toast({
         variant: "destructive",
         title: "Error saving product",
-        description: err.message
+        description: error.message
       });
     } finally {
       setLoading(false);

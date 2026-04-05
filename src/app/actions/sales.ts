@@ -16,7 +16,7 @@ const createSaleSchema = z.object({
   p_items: z.array(lineItemSchema).min(1)
 }).strict();
 
-export async function createSaleAction(payload: any) {
+export async function createSaleAction(payload: unknown) {
   const user = await requireAuth(); // Staff or Admin allowed
   const data = createSaleSchema.parse(payload);
 

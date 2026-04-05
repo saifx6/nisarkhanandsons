@@ -5,7 +5,7 @@ import { UserProfile } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatPKR, formatDate } from '@/lib/formatters';
+import { formatDate } from '@/lib/formatters';
 import { CheckCircle2, XCircle, ShieldAlert, ShieldCheck, Mail, Lock, User as UserIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -68,8 +68,8 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: U
       
       router.refresh();
 
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Provisioning Failed', description: err.message });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Provisioning Failed', description: (err as Error).message });
     } finally {
       setLoading(false);
     }

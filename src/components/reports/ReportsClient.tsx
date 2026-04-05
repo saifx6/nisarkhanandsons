@@ -10,15 +10,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 
 interface LogRecord {
   id: string;
   product_id: string;
   changed_by: string | null;
   change_type: string;
-  old_value: any;
-  new_value: any;
+  old_value: unknown;
+  new_value: unknown;
   created_at: string;
   user_profiles?: { full_name: string };
   products?: { name: string; sku: string };
@@ -65,15 +64,17 @@ export default function ReportsClient({ initialLogs }: { initialLogs: LogRecord[
             ) : (
               logs.map((log) => {
                 const theme = getActionTheme(log.change_type);
+                const oldVal = log.old_value as { quantity_in_stock?: number; selling_price?: number } | null;
+                const newVal = log.new_value as { quantity_in_stock?: number; selling_price?: number } | null;
                 
                 // Format diffs directly inside table cell
                 let diffText = 'Multiple fields modified';
                 if (log.change_type === 'UPDATE' || log.change_type === 'ADJUST') {
                    // Usually quantity differences or pricing differences
                    try {
-                     if (log.old_value?.quantity_in_stock !== undefined && log.new_value?.quantity_in_stock !== undefined) {
-                        diffText = `Qty: ${log.old_value.quantity_in_stock} → ${log.new_value.quantity_in_stock}`;
-                     } else if (log.old_value?.selling_price !== log.new_value?.selling_price) {
+                     if (oldVal?.quantity_in_stock !== undefined && newVal?.quantity_in_stock !== undefined) {
+                        diffText = `Qty: ${oldVal.quantity_in_stock} → ${newVal.quantity_in_stock}`;
+                     } else if (oldVal?.selling_price !== newVal?.selling_price) {
                         diffText = `Price changed | See raw diffs for details.`;
                      }
                    } catch { /* Suppress */ }

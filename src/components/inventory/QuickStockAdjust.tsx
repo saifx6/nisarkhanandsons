@@ -25,8 +25,8 @@ export default function QuickStockAdjust({ productId, currentStock }: { productI
       toast({ title: 'Stock Updated', description: `New stock level is ${newStock}` });
       setVal('');
       router.refresh();
-    } catch(err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    } catch(err) {
+      toast({ variant: 'destructive', title: 'Error', description: (err as Error).message });
     } finally {
       setLoading(false);
     }

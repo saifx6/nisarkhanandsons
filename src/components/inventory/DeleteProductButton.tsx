@@ -41,8 +41,8 @@ export default function DeleteProductButton({ productId, productName, isActive }
           : `"${productName}" is now active again.`,
       });
       router.refresh();
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Error', description: (err as Error).message });
     } finally {
       setLoading(false);
     }
@@ -76,7 +76,7 @@ export default function DeleteProductButton({ productId, productName, isActive }
         <AlertDialogHeader>
           <AlertDialogTitle className="text-text-primary font-heading">Deactivate Product?</AlertDialogTitle>
           <AlertDialogDescription className="text-text-secondary">
-            This will hide <span className="text-text-primary font-semibold">"{productName}"</span> from the active
+            This will hide <span className="text-text-primary font-semibold">&quot;{productName}&quot;</span> from the active
             inventory. All historical sales data is preserved. You can restore it at any time.
           </AlertDialogDescription>
         </AlertDialogHeader>

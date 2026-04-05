@@ -1,7 +1,7 @@
 'use client';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function OverviewChart({ data }: { data: any[] }) {
+export default function OverviewChart({ data }: { data: { name: string, revenue: number }[] }) {
   if (!data || data.length === 0) {
     return <div className="h-full flex items-center justify-center text-text-muted">No sales data available.</div>;
   }
@@ -31,7 +31,7 @@ export default function OverviewChart({ data }: { data: any[] }) {
         <Tooltip 
           contentStyle={{ backgroundColor: '#1E1E24', borderColor: '#2D2D35', borderRadius: '8px' }}
           itemStyle={{ color: '#39FF14' }}
-          formatter={(value: any) => [`PKR ${Number(value).toLocaleString()}`, 'Revenue']}
+          formatter={(value: unknown) => [`PKR ${Number(value as number || 0).toLocaleString()}`, 'Revenue']}
         />
         <Area type="monotone" dataKey="revenue" stroke="#39FF14" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
       </AreaChart>

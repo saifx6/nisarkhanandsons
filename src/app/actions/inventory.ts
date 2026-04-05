@@ -27,7 +27,7 @@ const adjustStockSchema = z.object({
 }).strict();
 
 // --- Server Actions ---
-export async function createProductAction(formData: any) {
+export async function createProductAction(formData: unknown) {
   const { user } = await requireAdmin();
   const data = productSchema.parse(formData);
 
@@ -47,7 +47,7 @@ export async function createProductAction(formData: any) {
   return newProd;
 }
 
-export async function updateProductAction(id: string, formData: any, oldData: any) {
+export async function updateProductAction(id: string, formData: unknown, oldData: unknown) {
   const { user } = await requireAdmin();
   const data = productSchema.parse(formData);
   const zId = z.string().uuid().parse(id);

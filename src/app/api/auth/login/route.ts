@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, user: data.user });
-  } catch (err: any) {
+  } catch {
     return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
   }
 }

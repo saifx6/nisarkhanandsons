@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
 import ProductForm from '@/components/inventory/ProductForm';
-import { Product, ProductLog } from '@/types';
+import { ProductLog } from '@/types';
 import { formatPKR, formatDate } from '@/lib/formatters';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
@@ -110,7 +110,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                   <h3 className="font-heading font-medium text-lg text-text-primary mb-4">Edit Log</h3>
                   {logs && logs.length > 0 ? (
                     <div className="space-y-4">
-                      {logs.map((log: any) => (
+                      {logs.map((log: ProductLog) => (
                         <div key={log.id} className="pb-4 border-b border-border last:border-0 last:pb-0">
                           <div className="flex justify-between text-sm mb-1">
                             <span className="font-medium text-text-primary">{log.user_profiles?.full_name || 'Unknown User'}</span>

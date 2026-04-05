@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, User, Bell, Palette, Shield } from 'lucide-react';
+import { User, Bell, Palette, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {

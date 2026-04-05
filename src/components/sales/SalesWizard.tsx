@@ -40,7 +40,7 @@ export default function SalesWizard({ products }: { products: Product[] }) {
     }
   };
 
-  const updateLineItem = (tempId: string, field: keyof LineItem, value: any) => {
+  const updateLineItem = (tempId: string, field: keyof LineItem, value: string | number | Product | undefined) => {
     setItems(items.map(item => {
       if (item.tempId !== tempId) return item;
       
@@ -105,8 +105,8 @@ export default function SalesWizard({ products }: { products: Product[] }) {
       router.push('/sales');
       router.refresh();
 
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Transaction Failed', description: err.message });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Transaction Failed', description: (err as Error).message });
     } finally {
       setLoading(false);
     }
@@ -150,7 +150,7 @@ export default function SalesWizard({ products }: { products: Product[] }) {
         </h3>
         
         <div className="space-y-4">
-          {items.map((item, index) => (
+          {items.map((item) => (
             <div key={item.tempId} className="flex flex-col md:flex-row gap-4 items-start md:items-end pb-4 border-b border-border/50">
               <div className="flex-1 w-full space-y-2">
                 <Label className="text-text-secondary">Product</Label>
