@@ -10,7 +10,7 @@ export interface UserProfile {
 
 export type TileCategory = 'Floor Tile' | 'Wall Tile' | 'Border Tile' | 'Outdoor Tile' | 'Mosaic';
 export type TileFinish = 'Matte' | 'Glossy' | 'Polished' | 'Textured' | 'Rustic';
-export type TileUnit = 'Box' | 'Square Meter' | 'Piece';
+export type TileUnit = 'Box';
 
 export interface Product {
   id: string;
@@ -22,6 +22,7 @@ export interface Product {
   finish: TileFinish | null;
   color: string | null;
   unit: TileUnit;
+  pieces_per_box: number;
   quantity_in_stock: number;
   low_stock_threshold: number;
   cost_price?: number; // Optional because staff won't see it

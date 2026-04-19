@@ -93,6 +93,7 @@ export default function SalesList({ initialSales }: { initialSales: Sale[] }) {
                 <TableRow 
                   key={sale.id} 
                   className="border-border hover:bg-bg-hover cursor-pointer"
+                  onClick={() => router.push(`/sales/${sale.id}`)}
                 >
                   <TableCell className="font-mono text-xs">{sale.id.slice(0, 8)}</TableCell>
                   <TableCell className="text-text-primary font-mono">{formatDate(sale.created_at)}</TableCell>

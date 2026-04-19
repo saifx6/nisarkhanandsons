@@ -163,7 +163,7 @@ export default function SalesWizard({ products }: { products: Product[] }) {
                   <option value="">Select a product...</option>
                   {products.map(p => (
                     <option key={p.id} value={p.id}>
-                      {p.sku} - {p.name} ({p.size}) | In Stock: {p.quantity_in_stock}
+                      {p.sku} - {p.name} ({p.size}) - {p.pieces_per_box} pcs/box | In Stock: {p.quantity_in_stock}
                     </option>
                   ))}
                 </select>

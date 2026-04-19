@@ -25,7 +25,8 @@ export default function ProductForm({ initialData, isAdmin }: { initialData?: Pr
     size: initialData?.size || '',
     finish: initialData?.finish || 'Matte',
     color: initialData?.color || '',
-    unit: initialData?.unit || 'Box',
+    unit: 'Box' as const,
+    pieces_per_box: initialData?.pieces_per_box || 1,
     quantity_in_stock: initialData?.quantity_in_stock || 0,
     low_stock_threshold: initialData?.low_stock_threshold || 10,
     cost_price: initialData?.cost_price || 0,
@@ -125,9 +126,21 @@ export default function ProductForm({ initialData, isAdmin }: { initialData?: Pr
           <Label htmlFor="unit" className="text-text-secondary">Unit of Measure *</Label>
           <select id="unit" name="unit" value={formData.unit} onChange={handleChange} required className="w-full h-10 px-3 py-2 bg-bg-elevated border border-border rounded-md text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary">
             <option value="Box">Box</option>
-            <option value="Square Meter">Square Meter</option>
-            <option value="Piece">Piece</option>
           </select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="pieces_per_box" className="text-text-secondary">Pieces per Box *</Label>
+          <Input id="pieces_per_box" name="pieces_per_box" type="number" min="1" list="pieces_suggestions" value={formData.pieces_per_box} onChange={handleChange} required className="bg-bg-elevated border-border text-text-primary font-mono" />
+          <datalist id="pieces_suggestions">
+            <option value="6"></option>
+            <option value="8"></option>
+            <option value="10"></option>
+            <option value="12"></option>
+            <option value="16"></option>
+            <option value="18"></option>
+            <option value="24"></option>
+          </datalist>
         </div>
       </div>
 

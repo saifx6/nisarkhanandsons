@@ -129,7 +129,7 @@ export default function InventoryClient({ initialProducts, isAdmin }: { initialP
                       <div className="text-xs text-text-secondary mt-1">{p.brand} &bull; {p.size} &bull; {p.finish} &bull; {p.color}</div>
                     </TableCell>
                     <TableCell className="text-text-secondary">{p.category}</TableCell>
-                    <TableCell className="font-mono text-sm">{p.quantity_in_stock} {p.unit}</TableCell>
+                    <TableCell className="font-mono text-sm">{p.quantity_in_stock} {p.unit} / {p.pieces_per_box} pcs</TableCell>
                     <TableCell className="text-right font-mono text-accent-primary">{formatPKR(p.selling_price)}</TableCell>
                     <TableCell className="text-right">{statusBadge}</TableCell>
                   </TableRow>

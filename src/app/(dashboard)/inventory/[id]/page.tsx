@@ -54,9 +54,11 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
         <div className="col-span-1 border border-border bg-bg-surface p-6 rounded-lg space-y-6">
           <div>
             <p className="text-sm text-text-secondary mb-1">Current Stock</p>
-            <div className="flex items-end gap-2">
-              <span className="text-4xl font-mono font-bold text-text-primary">{product.quantity_in_stock}</span>
-              <span className="text-text-muted text-sm pb-1">{product.unit}s</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-end gap-2">
+                <span className="text-4xl font-mono font-bold text-text-primary">{product.quantity_in_stock}</span>
+                <span className="text-text-muted text-sm pb-1">{product.unit}s</span>
+              </div>
             </div>
           </div>
           
@@ -89,6 +91,14 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
             <div className="flex justify-between text-sm">
               <span className="text-text-muted">Color</span>
               <span className="text-text-primary font-medium">{product.color || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-text-muted">Unit</span>
+              <span className="text-text-primary font-medium">{product.unit}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-text-muted">Pieces per Box</span>
+              <span className="text-text-primary font-medium">{product.pieces_per_box}</span>
             </div>
           </div>
         </div>
