@@ -143,11 +143,11 @@ export default function ReceiptButton({ sale, items }: { sale: ExtendedSale, ite
       const receiptNo = sale.sale_number || sale.id;
       doc.save(`Receipt-${receiptNo}.pdf`);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       toast({
         title: "Error Generating PDF",
-        description: err.message || "An unexpected error occurred.",
+        description: err instanceof Error ? err.message : "An unexpected error occurred.",
         variant: "destructive"
       });
     } finally {
