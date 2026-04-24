@@ -60,5 +60,6 @@ export interface SaleItem {
   quantity: number;
   unit_price: number;
   subtotal: number;
+  pieces_per_box_snapshot: number;
   products?: Partial<Product>;
 }

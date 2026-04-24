@@ -13,9 +13,17 @@ import { createSaleAction } from '@/app/actions/sales';
 interface LineItem {
   tempId: string;
   product_id: string;
-  quantity: number;
-  unit_price: number;
+  boxes: number;
+  pieces: number;
   selected_product?: Product;
+}
+
+function formatQtyDisplay(quantity: number, piecesPerBox: number): string {
+  const boxes = Math.floor(quantity / piecesPerBox);
+  const remainderPieces = quantity % piecesPerBox;
+  if (boxes > 0 && remainderPieces > 0) return `${boxes} Boxes + ${remainderPieces} Pieces`;
+  if (boxes > 0) return `${boxes} Boxes`;
+  return `${remainderPieces} Pieces`;
 }
 
 export default function SalesWizard({ products }: { products: Product[] }) {
@@ -27,11 +35,11 @@ export default function SalesWizard({ products }: { products: Product[] }) {
   const [customerPhone, setCustomerPhone] = useState('');
   
   const [items, setItems] = useState<LineItem[]>([
-    { tempId: crypto.randomUUID(), product_id: '', quantity: 1, unit_price: 0 }
+    { tempId: crypto.randomUUID(), product_id: '', boxes: 0, pieces: 0 }
   ]);
 
   const addLineItem = () => {
-    setItems([...items, { tempId: crypto.randomUUID(), product_id: '', quantity: 1, unit_price: 0 }]);
+    setItems([...items, { tempId: crypto.randomUUID(), product_id: '', boxes: 0, pieces: 0 }]);
   };
 
   const removeLineItem = (tempId: string) => {
@@ -40,48 +48,64 @@ export default function SalesWizard({ products }: { products: Product[] }) {
     }
   };
 
-  const updateLineItem = (tempId: string, field: keyof LineItem, value: string | number | Product | undefined) => {
+  const updateProduct = (tempId: string, productId: string) => {
     setItems(items.map(item => {
       if (item.tempId !== tempId) return item;
-      
-      const updated = { ...item, [field]: value };
-      
-      // Auto-fill price if product changes
-      if (field === 'product_id') {
-        const prod = products.find(p => p.id === value);
-        if (prod) {
-          updated.selected_product = prod;
-          updated.unit_price = prod.selling_price;
-          // default quantity remains to what they typed or 1, but we enforce max later
-        } else {
-          updated.selected_product = undefined;
-          updated.unit_price = 0;
-        }
-      }
-      return updated;
+      const prod = products.find(p => p.id === productId);
+      return {
+        ...item,
+        product_id: productId,
+        selected_product: prod,
+        boxes: 0,
+        pieces: 0,
+      };
+    }));
+  };
+
+  const updateBoxes = (tempId: string, value: number) => {
+    setItems(items.map(item => {
+      if (item.tempId !== tempId) return item;
+      return { ...item, boxes: isNaN(value) || value < 0 ? 0 : Math.floor(value) };
+    }));
+  };
+
+  const updatePieces = (tempId: string, value: number, maxPieces: number) => {
+    setItems(items.map(item => {
+      if (item.tempId !== tempId) return item;
+      const clamped = isNaN(value) || value < 0 ? 0 : Math.min(Math.floor(value), maxPieces);
+      return { ...item, pieces: clamped };
     }));
   };
 
   const totalAmount = useMemo(() => {
-    return items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+    return items.reduce((sum, item) => {
+      if (!item.selected_product) return sum;
+      const ppb = item.selected_product.pieces_per_box;
+      const pricePerPiece = item.selected_product.selling_price / ppb;
+      const totalPieces = item.boxes * ppb + item.pieces;
+      return sum + totalPieces * pricePerPiece;
+    }, 0);
   }, [items]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate
-    const validItems = items.filter(i => i.product_id && i.quantity > 0 && i.unit_price > 0);
+    const validItems = items.filter(i => i.product_id && (i.boxes > 0 || i.pieces > 0) && i.selected_product);
     if (validItems.length === 0) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Please add at least one valid product.' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Please add at least one product with a quantity greater than 0.' });
       return;
     }
 
     for (const item of validItems) {
-      if (item.selected_product && item.quantity > item.selected_product.quantity_in_stock) {
+      if (!item.selected_product) continue;
+      const ppb = item.selected_product.pieces_per_box;
+      const totalPieces = item.boxes * ppb + item.pieces;
+      const boxesNeeded = Math.ceil(totalPieces / ppb);
+      if (boxesNeeded > item.selected_product.quantity_in_stock) {
         toast({ 
           variant: 'destructive', 
           title: 'Stock Error', 
-          description: `Insufficient stock for ${item.selected_product.name}. Max available is ${item.selected_product.quantity_in_stock}`
+          description: `Insufficient stock for ${item.selected_product.name}. Max available is ${item.selected_product.quantity_in_stock} boxes.`
         });
         return;
       }
@@ -94,8 +118,10 @@ export default function SalesWizard({ products }: { products: Product[] }) {
         p_customer_phone: customerPhone || null,
         p_items: validItems.map(i => ({
           product_id: i.product_id,
-          quantity: i.quantity,
-          unit_price: i.unit_price
+          boxes: i.boxes,
+          pieces: i.pieces,
+          pieces_per_box: i.selected_product!.pieces_per_box,
+          selling_price: i.selected_product!.selling_price,
         }))
       };
 
@@ -149,64 +175,105 @@ export default function SalesWizard({ products }: { products: Product[] }) {
           <ShoppingCart size={18} className="text-accent-primary" /> Line Items
         </h3>
         
-        <div className="space-y-4">
-          {items.map((item) => (
-            <div key={item.tempId} className="flex flex-col md:flex-row gap-4 items-start md:items-end pb-4 border-b border-border/50">
-              <div className="flex-1 w-full space-y-2">
-                <Label className="text-text-secondary">Product</Label>
-                <select 
-                  value={item.product_id}
-                  onChange={(e) => updateLineItem(item.tempId, 'product_id', e.target.value)}
-                  className="w-full h-10 px-3 py-2 bg-bg-elevated border border-border rounded-md text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
-                  required
-                >
-                  <option value="">Select a product...</option>
-                  {products.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.sku} - {p.name} ({p.size}) - {p.pieces_per_box} pcs/box | In Stock: {p.quantity_in_stock}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="w-full md:w-24 space-y-2">
-                <Label className="text-text-secondary">Qty</Label>
-                <Input 
-                  type="number" 
-                  min="1" 
-                  value={item.quantity}
-                  onChange={(e) => updateLineItem(item.tempId, 'quantity', parseInt(e.target.value) || 0)}
-                  className="bg-bg-elevated border-border text-text-primary font-mono text-center focus-visible:ring-accent-primary"
-                  required
-                />
-              </div>
+        <div className="space-y-6">
+          {items.map((item) => {
+            const prod = item.selected_product;
+            const ppb = prod?.pieces_per_box ?? 1;
+            const maxPieces = ppb - 1;
+            const pricePerPiece = prod ? prod.selling_price / ppb : 0;
+            const totalPieces = item.boxes * ppb + item.pieces;
+            const lineSubtotal = totalPieces * pricePerPiece;
 
-              <div className="w-full md:w-40 space-y-2">
-                <Label className="text-text-secondary">Unit Price (PKR)</Label>
-                <Input 
-                  type="number" 
-                  min="0"
-                  value={item.unit_price}
-                  onChange={(e) => updateLineItem(item.tempId, 'unit_price', parseFloat(e.target.value) || 0)}
-                  className="bg-bg-elevated border-border text-text-primary font-mono text-right focus-visible:ring-accent-primary"
-                  required
-                />
+            return (
+              <div key={item.tempId} className="flex flex-col gap-4 pb-4 border-b border-border/50">
+                {/* Product selector */}
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
+                  <div className="flex-1 w-full space-y-2">
+                    <Label className="text-text-secondary">Product</Label>
+                    <select 
+                      value={item.product_id}
+                      onChange={(e) => updateProduct(item.tempId, e.target.value)}
+                      className="w-full h-10 px-3 py-2 bg-bg-elevated border border-border rounded-md text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent-primary"
+                      required
+                    >
+                      <option value="">Select a product...</option>
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.sku} - {p.name} ({p.size}) - {p.pieces_per_box} pcs/box | In Stock: {p.quantity_in_stock}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="w-full md:w-auto h-10 flex items-center justify-end">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => removeLineItem(item.tempId)}
+                      disabled={items.length === 1}
+                      className="border-danger/50 text-danger hover:bg-danger hover:text-white"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Quantity inputs row */}
+                {prod && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                    {/* Boxes input */}
+                    <div className="space-y-2">
+                      <Label className="text-text-secondary text-xs">Boxes</Label>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        step="1"
+                        value={item.boxes}
+                        onChange={(e) => updateBoxes(item.tempId, parseInt(e.target.value))}
+                        className="bg-bg-elevated border-border text-text-primary font-mono text-center focus-visible:ring-accent-primary"
+                      />
+                      <p className="text-xs text-text-muted">{formatPKR(prod.selling_price)}/box</p>
+                    </div>
+
+                    {/* Pieces input */}
+                    <div className="space-y-2">
+                      <Label className="text-text-secondary text-xs">Pieces (0–{maxPieces})</Label>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        max={maxPieces}
+                        step="1"
+                        value={item.pieces}
+                        onChange={(e) => updatePieces(item.tempId, parseInt(e.target.value), maxPieces)}
+                        className="bg-bg-elevated border-border text-text-primary font-mono text-center focus-visible:ring-accent-primary"
+                      />
+                      <p className="text-xs text-text-muted">{formatPKR(pricePerPiece)}/pc</p>
+                    </div>
+
+                    {/* Total pieces (read-only) */}
+                    <div className="space-y-2">
+                      <Label className="text-text-secondary text-xs">Total Pieces</Label>
+                      <div className="h-10 px-3 flex items-center bg-bg-elevated/50 border border-border/50 rounded-md font-mono text-text-primary text-sm">
+                        {totalPieces}
+                      </div>
+                      <p className="text-xs text-text-muted">
+                        {formatQtyDisplay(totalPieces, ppb)}
+                      </p>
+                    </div>
+
+                    {/* Line subtotal (read-only) */}
+                    <div className="space-y-2">
+                      <Label className="text-text-secondary text-xs">Subtotal</Label>
+                      <div className="h-10 px-3 flex items-center justify-end bg-bg-elevated/50 border border-border/50 rounded-md font-mono text-accent-primary text-sm font-medium">
+                        {formatPKR(lineSubtotal)}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              
-              <div className="w-full md:w-auto h-10 flex items-center justify-end">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => removeLineItem(item.tempId)}
-                  disabled={items.length === 1}
-                  className="border-danger/50 text-danger hover:bg-danger hover:text-white"
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <Button 

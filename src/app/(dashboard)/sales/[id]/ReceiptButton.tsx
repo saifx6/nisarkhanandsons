@@ -59,13 +59,22 @@ export default function ReceiptButton({ sale, items }: { sale: ExtendedSale, ite
       doc.line(15, startY + 20, pageWidth - 15, startY + 20);
       
       // Items Table using autoTable
-      const tableColumn = ["Item Name", "Qty", "Unit Price (PKR)", "Subtotal (PKR)"];
-      const tableRows = items.map(item => [
-        item.products?.name || 'Unknown Item',
-        item.quantity.toString(),
-        item.unit_price.toString(),
-        item.subtotal.toString()
-      ]);
+      const tableColumn = ["Item Name", "Qty", "Unit Price (PKR/pc)", "Subtotal (PKR)"];
+      const tableRows = items.map(item => {
+        const ppb: number = item.pieces_per_box_snapshot ?? 1;
+        const boxes = Math.floor(item.quantity / ppb);
+        const remainderPieces = item.quantity % ppb;
+        let qtyDisplay: string;
+        if (boxes > 0 && remainderPieces > 0) qtyDisplay = `${boxes} Boxes + ${remainderPieces} Pcs`;
+        else if (boxes > 0) qtyDisplay = `${boxes} Boxes`;
+        else qtyDisplay = `${remainderPieces} Pcs`;
+        return [
+          item.products?.name || 'Unknown Item',
+          qtyDisplay,
+          item.unit_price.toString(),
+          item.subtotal.toString()
+        ];
+      });
       
       let finalY = startY + 25;
       

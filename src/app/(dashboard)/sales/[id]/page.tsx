@@ -14,6 +14,14 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+function formatQtyDisplay(quantity: number, piecesPerBox: number): string {
+  const boxes = Math.floor(quantity / piecesPerBox);
+  const remainderPieces = quantity % piecesPerBox;
+  if (boxes > 0 && remainderPieces > 0) return `${boxes} Boxes + ${remainderPieces} Pieces`;
+  if (boxes > 0) return `${boxes} Boxes`;
+  return `${remainderPieces} Pieces`;
+}
+
 export default async function SaleDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -93,14 +101,17 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items && items.map((item) => (
-                <TableRow key={item.id} className="border-border">
-                  <TableCell className="text-text-primary">{item.products?.name || 'Unknown'}</TableCell>
-                  <TableCell className="text-right font-mono">{item.quantity}</TableCell>
-                  <TableCell className="text-right font-mono">{formatPKR(item.unit_price)}</TableCell>
-                  <TableCell className="text-right font-mono">{formatPKR(item.subtotal)}</TableCell>
-                </TableRow>
-              ))}
+              {items && items.map((item) => {
+                const ppb: number = item.pieces_per_box_snapshot ?? 1;
+                return (
+                  <TableRow key={item.id} className="border-border">
+                    <TableCell className="text-text-primary">{item.products?.name || 'Unknown'}</TableCell>
+                    <TableCell className="text-right font-mono">{formatQtyDisplay(item.quantity, ppb)}</TableCell>
+                    <TableCell className="text-right font-mono">{formatPKR(item.unit_price)}/pc</TableCell>
+                    <TableCell className="text-right font-mono">{formatPKR(item.subtotal)}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
