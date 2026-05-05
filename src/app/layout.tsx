@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 import { Toaster } from "@/components/ui/toaster";
+import PwaRegister from "@/components/PwaRegister";
 
 export default function RootLayout({
   children,
@@ -31,6 +32,7 @@ export default function RootLayout({
         <meta name="application-name" content="NKS" />
       </head>
       <body className={`${inter.variable} ${rajdhani.variable} ${jetbrainsMono.variable} font-sans antialiased text-text-primary bg-bg-base`}>
+        <PwaRegister />
         {children}
         <Toaster />
       </body>
