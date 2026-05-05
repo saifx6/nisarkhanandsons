@@ -9,6 +9,7 @@ const jetbrainsMono = JetBrains_Mono({ weight: ["600"], subsets: ["latin"], vari
 export const metadata: Metadata = {
   title: "Nisar Khan & Sons - Shop Management System",
   description: "Tiles Shop Management System",
+  manifest: "/manifest.json",
 };
 
 import { Toaster } from "@/components/ui/toaster";
@@ -22,7 +23,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#39FF14" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
