@@ -4,13 +4,22 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth-server';
 import { createClient } from '@/lib/supabase-server';
 
+const sizeDecimalSchema = z.number()
+  .min(0.01, { message: "Size must be at least 0.01" })
+  .max(99.99, { message: "Size cannot exceed 99.99" })
+  .refine(
+    (val) => Number((val * 100).toFixed(8)) % 1 === 0,
+    { message: "Size can have at most 2 decimal places" }
+  );
+
 // --- Zod Schemas ---
 const productSchema = z.object({
   sku: z.string().min(1).max(50),
   name: z.string().min(1).max(100),
   brand: z.string().min(1).max(100),
   category: z.string().max(50),
-  size: z.string().max(50),
+  size_length: sizeDecimalSchema,
+  size_width: sizeDecimalSchema,
   finish: z.string().max(50),
   color: z.string().max(50).optional(),
   unit: z.literal('Box'),
@@ -20,7 +29,13 @@ const productSchema = z.object({
   cost_price: z.number().min(0),
   selling_price: z.number().min(0),
   description: z.string().max(1000).optional(),
-}).strict();
+}).strict().transform((data) => {
+  const { size_length, size_width, ...rest } = data;
+  return {
+    ...rest,
+    size: `${size_length.toFixed(2)} x ${size_width.toFixed(2)} m`
+  };
+});
 
 const adjustStockSchema = z.object({
   productId: z.string().uuid(),

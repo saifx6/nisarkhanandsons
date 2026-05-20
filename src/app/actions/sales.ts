@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth-server';
 import { createClient } from '@/lib/supabase-server';
+import { createAdminClient } from '@/lib/supabase-admin';
 
 const lineItemSchema = z.object({
   product_id: z.string().uuid(),
@@ -18,7 +19,8 @@ const lineItemSchema = z.object({
 const createSaleSchema = z.object({
   p_customer_name: z.string().max(100).nullable().optional(),
   p_customer_phone: z.string().max(20).nullable().optional(),
-  p_items: z.array(lineItemSchema).min(1)
+  p_items: z.array(lineItemSchema).min(1),
+  discount: z.number().min(0).optional().default(0),
 }).strict();
 
 export async function createSaleAction(payload: unknown) {
@@ -52,6 +54,21 @@ export async function createSaleAction(payload: unknown) {
   const { data: result, error } = await supabase.rpc('create_sale', finalPayload);
 
   if (error) throw new Error(error.message);
+
+  if (data.discount > 0) {
+    const subtotal = transformedItems.reduce((sum, item) => sum + item.subtotal, 0);
+    const totalAmount = Math.max(0, subtotal - data.discount);
+    const adminSupabase = createAdminClient();
+    const { error: patchError } = await adminSupabase
+      .from('sales')
+      .update({
+        discount: data.discount,
+        total_amount: totalAmount
+      })
+      .eq('id', result);
+      
+    if (patchError) throw new Error(patchError.message);
+  }
 
   return result;
 }

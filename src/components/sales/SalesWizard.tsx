@@ -33,6 +33,7 @@ export default function SalesWizard({ products }: { products: Product[] }) {
   const [loading, setLoading] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [discountInput, setDiscountInput] = useState('');
   
   const [items, setItems] = useState<LineItem[]>([
     { tempId: crypto.randomUUID(), product_id: '', boxes: 0, pieces: 0 }
@@ -87,12 +88,21 @@ export default function SalesWizard({ products }: { products: Product[] }) {
     }, 0);
   }, [items]);
 
+  const discountNum = discountInput === '' ? 0 : Number(discountInput);
+  const discountError = discountNum > totalAmount ? 'Discount cannot exceed the subtotal' : '';
+  const totalAmountAfterDiscount = Math.max(0, totalAmount - discountNum);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const validItems = items.filter(i => i.product_id && (i.boxes > 0 || i.pieces > 0) && i.selected_product);
     if (validItems.length === 0) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please add at least one product with a quantity greater than 0.' });
+      return;
+    }
+
+    if (discountNum > totalAmount) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Discount cannot exceed the subtotal' });
       return;
     }
 
@@ -122,7 +132,8 @@ export default function SalesWizard({ products }: { products: Product[] }) {
           pieces: i.pieces,
           pieces_per_box: i.selected_product!.pieces_per_box,
           selling_price: i.selected_product!.selling_price,
-        }))
+        })),
+        discount: discountNum
       };
 
       await createSaleAction(payload);
@@ -286,11 +297,49 @@ export default function SalesWizard({ products }: { products: Product[] }) {
         </Button>
       </div>
 
+      {/* Discount Section */}
+      <div className="bg-bg-surface p-6 border border-border rounded-lg space-y-4">
+        <div className="max-w-md space-y-2">
+          <Label htmlFor="discount" className="text-text-secondary">Discount (PKR) — Optional</Label>
+          <Input
+            id="discount"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="0"
+            value={discountInput}
+            onChange={(e) => setDiscountInput(e.target.value)}
+            className="bg-bg-elevated border-border text-text-primary focus-visible:ring-accent-primary"
+          />
+          {discountError && (
+            <p className="text-danger text-sm font-medium">{discountError}</p>
+          )}
+        </div>
+        
+        {/* Breakdown */}
+        <div className="pt-2 border-t border-border/50 max-w-md space-y-2 text-sm">
+          <div className="flex justify-between text-text-secondary">
+            <span>Subtotal:</span>
+            <span className="font-mono">{formatPKR(totalAmount)}</span>
+          </div>
+          {discountNum > 0 && (
+            <div className="flex justify-between text-text-secondary">
+              <span>Discount:</span>
+              <span className="font-mono text-danger">− {formatPKR(discountNum)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-text-primary font-bold text-base pt-1 border-t border-border/30">
+            <span>Total:</span>
+            <span className="font-mono text-accent-primary">{formatPKR(totalAmountAfterDiscount)}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Checkout Summary */}
       <div className="bg-bg-elevated p-6 border border-border rounded-lg flex flex-col md:flex-row justify-between items-center gap-6 shadow-[0_0_20px_rgba(30,30,35,0.7)]">
         <div>
           <p className="text-text-secondary text-sm">Total Amount</p>
-          <p className="text-4xl font-mono font-bold text-accent-primary">{formatPKR(totalAmount)}</p>
+          <p className="text-4xl font-mono font-bold text-accent-primary">{formatPKR(totalAmountAfterDiscount)}</p>
         </div>
         
         <div className="flex gap-4 w-full md:w-auto">

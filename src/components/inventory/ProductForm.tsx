@@ -9,6 +9,26 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { createProductAction, updateProductAction } from '@/app/actions/inventory';
 
+function parseSizeString(sizeStr?: string | null): { length: string; width: string } {
+  if (!sizeStr) return { length: '', width: '' };
+  const match = sizeStr.match(/^\s*([\d.]+)\s*x\s*([\d.]+)\s*m\s*$/i);
+  if (match) {
+    return {
+      length: match[1],
+      width: match[2]
+    };
+  }
+  return {
+    length: sizeStr,
+    width: ''
+  };
+}
+
+const isNumeric = (val: string) => {
+  if (val === '') return true;
+  return !isNaN(Number(val));
+};
+
 export default function ProductForm({ initialData, isAdmin }: { initialData?: Product, isAdmin: boolean }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -17,12 +37,15 @@ export default function ProductForm({ initialData, isAdmin }: { initialData?: Pr
   // Generating a random SKU if none
   const generateSKU = () => `NKS-${Math.floor(1000 + Math.random() * 9000)}`;
 
+  const parsedSize = parseSizeString(initialData?.size);
+
   const [formData, setFormData] = useState({
     sku: initialData?.sku || generateSKU(),
     name: initialData?.name || '',
     brand: initialData?.brand || '',
     category: initialData?.category || 'Floor Tile',
-    size: initialData?.size || '',
+    size_length: parsedSize.length,
+    size_width: parsedSize.width,
     finish: initialData?.finish || 'Matte',
     color: initialData?.color || '',
     unit: 'Box' as const,
@@ -38,7 +61,7 @@ export default function ProductForm({ initialData, isAdmin }: { initialData?: Pr
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : value
+      [name]: (name === 'size_length' || name === 'size_width') ? value : (type === 'number' ? Number(value) : value)
     }));
   };
 
@@ -47,11 +70,16 @@ export default function ProductForm({ initialData, isAdmin }: { initialData?: Pr
     setLoading(true);
 
     try {
+      const payload = {
+        ...formData,
+        size_length: formData.size_length === '' ? undefined : Number(formData.size_length),
+        size_width: formData.size_width === '' ? undefined : Number(formData.size_width),
+      };
       if (initialData) {
-        await updateProductAction(initialData.id, formData, initialData);
+        await updateProductAction(initialData.id, payload, initialData);
         toast({ title: "Product Updated", description: "The product details have been saved." });
       } else {
-        await createProductAction(formData);
+        await createProductAction(payload);
         toast({ title: "Product Added", description: `${formData.name} has been added to inventory.` });
       }
       
@@ -102,8 +130,43 @@ export default function ProductForm({ initialData, isAdmin }: { initialData?: Pr
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="size" className="text-text-secondary">Tile Size * (e.g. 60x60 cm)</Label>
-          <Input id="size" name="size" value={formData.size} onChange={handleChange} required className="bg-bg-elevated border-border text-text-primary" />
+          <Label className="text-text-secondary">Tile Size *</Label>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <Label htmlFor="size_length" className="sr-only">Length (m)</Label>
+              <Input
+                id="size_length"
+                name="size_length"
+                type={isNumeric(formData.size_length) ? "number" : "text"}
+                step="0.01"
+                min="0.01"
+                max="99.99"
+                placeholder="Length"
+                value={formData.size_length}
+                onChange={handleChange}
+                required
+                className="bg-bg-elevated border-border text-text-primary w-full"
+              />
+            </div>
+            <span className="text-text-secondary font-medium">×</span>
+            <div className="flex-1">
+              <Label htmlFor="size_width" className="sr-only">Width (m)</Label>
+              <Input
+                id="size_width"
+                name="size_width"
+                type={isNumeric(formData.size_width) ? "number" : "text"}
+                step="0.01"
+                min="0.01"
+                max="99.99"
+                placeholder="Width"
+                value={formData.size_width}
+                onChange={handleChange}
+                required
+                className="bg-bg-elevated border-border text-text-primary w-full"
+              />
+            </div>
+            <span className="text-text-secondary font-medium">m</span>
+          </div>
         </div>
 
         <div className="space-y-2">

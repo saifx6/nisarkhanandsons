@@ -35,19 +35,27 @@ export default function ReceiptButton({ sale, items }: { sale: ExtendedSale, ite
       // Header
       doc.setFontSize(22);
       doc.setFont('helvetica', 'bold');
-      doc.text("Nisar Khan & Sons", pageWidth / 2, 20, { align: "center" });
+      doc.text("Burhan Tile Center", pageWidth / 2, 20, { align: "center" });
       
-      doc.setFontSize(12);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.text("Tiles & Flooring Solutions", pageWidth / 2, 28, { align: "center" });
+      doc.text("Qalander Khan Plaza, Nawanshehar, Abbottabad", pageWidth / 2, 27, { align: "center" });
+      
+      doc.text("Zain: 0315-5449479", pageWidth / 2, 33, { align: "center" });
+      doc.text("Nisar Ali Khan: 0321-9674146", pageWidth / 2, 39, { align: "center" });
+      doc.text("Waleed: 0311-0098590", pageWidth / 2, 45, { align: "center" });
+      
+      doc.setFont('helvetica', 'italic');
+      doc.text("Your Trusted Tiles Partner", pageWidth / 2, 51, { align: "center" });
+      doc.setFont('helvetica', 'normal');
       
       // Divider
       doc.setLineWidth(0.5);
-      doc.line(15, 35, pageWidth - 15, 35);
+      doc.line(15, 57, pageWidth - 15, 57);
       
       // Sale Details
       doc.setFontSize(10);
-      const startY = 45;
+      const startY = 66;
       doc.text(`Receipt No: ${sale.sale_number || sale.id?.split('-')[0].toUpperCase()}`, 15, startY);
       doc.text(`Date: ${sale.created_at ? new Date(sale.created_at).toLocaleDateString('en-GB') : ''}`, 15, startY + 7);
       
